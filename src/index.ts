@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
-import { __prod__ } from "./constants";
+import { COOKIE_USER_NAME, __prod__ } from "./constants";
 import microConfig from "./mikro-orm.config";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
@@ -43,7 +43,7 @@ const main = async () => {
         secure: __prod__, //cookie only works in https
       },
       saveUninitialized: false,
-      name: "qid",
+      name: COOKIE_USER_NAME,
       secret: "qkqfgdsfidsbfibuidfk",
       resave: false,
     })

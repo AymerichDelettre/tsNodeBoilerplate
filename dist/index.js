@@ -48,7 +48,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             secure: constants_1.__prod__,
         },
         saveUninitialized: false,
-        name: "qid",
+        name: constants_1.COOKIE_USER_NAME,
         secret: "qkqfgdsfidsbfibuidfk",
         resave: false,
     }));
