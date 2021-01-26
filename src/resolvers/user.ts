@@ -10,7 +10,6 @@ import {
   Query,
 } from "type-graphql";
 import argon2 from "argon2";
-import { EntityManager } from "@mikro-orm/postgresql";
 import { COOKIE_USER_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { UsernamePasswordInput } from "./UsernamePasswordInput";
 import { validateRegister } from "../utils/validateRegister";
@@ -157,6 +156,13 @@ export class UserResolver {
         })
         .returning("*")
         .execute();
+      user = result.raw[0];
+
+      //Alternative way to create the user :
+      // const result = await User.create({
+      //   username: options.username,
+      //   password: hashedPassword,
+      //   email: options.email}).save();
     } catch (err) {
       if (err.code === "23505") {
         //Duplicate username error
@@ -183,13 +189,12 @@ export class UserResolver {
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
     @Arg("password") password: string,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
-    const user = await em.findOne(
-      User,
+    const user = await User.findOne(
       usernameOrEmail.includes("@")
-        ? { email: usernameOrEmail }
-        : { username: usernameOrEmail }
+        ? { where: { email: usernameOrEmail } }
+        : { where: { username: usernameOrEmail } }
     );
     if (!user) {
       return {
