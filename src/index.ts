@@ -1,27 +1,35 @@
 import "reflect-metadata";
-import { MikroORM } from "@mikro-orm/core";
-import { __prod__ } from "./constants";
-import microConfig from "./mikro-orm.config";
+import { COOKIE_USER_NAME, __prod__ } from "./constants";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/posts";
 import { UserResolver } from "./resolvers/user";
-import redis from "redis";
+import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import { MyContext } from "./types";
 import cors from "cors";
+import { createConnection } from "typeorm";
+import { User } from "./entities/User";
+import { Post } from "./entities/Post";
 
 const main = async () => {
-  const orm = await MikroORM.init(microConfig);
-  await orm.getMigrator().up();
+  const conn = await createConnection({
+    type: "postgres",
+    database: "tutdb2",
+    username: "postgres",
+    password: "postgres",
+    logging: true,
+    synchronize: true,
+    entities: [Post, User],
+  });
 
   const app = express();
 
   const RedisStore = connectRedis(session);
-  const redisClient = redis.createClient();
+  const redis = new Redis();
 
   app.use(
     cors({
@@ -33,7 +41,7 @@ const main = async () => {
   app.use(
     session({
       store: new RedisStore({
-        client: redisClient,
+        client: redis,
         disableTouch: true,
       }),
       cookie: {
@@ -43,7 +51,7 @@ const main = async () => {
         secure: __prod__, //cookie only works in https
       },
       saveUninitialized: false,
-      name: "qid",
+      name: COOKIE_USER_NAME,
       secret: "qkqfgdsfidsbfibuidfk",
       resave: false,
     })
@@ -54,7 +62,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }): MyContext => ({ em: orm.em, req, res }),
+    context: ({ req, res }): MyContext => ({ req, res, redis }),
   });
 
   apolloServer.applyMiddleware({
