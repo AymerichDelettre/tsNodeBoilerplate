@@ -1,3 +1,6 @@
+Backend boilerplate including user login, register and password change.
+Stack : Typerscript, GraphQL, Apollo, Type-ORM, Redis, PostgreSQL.
+
 Quick notes :
 
 //To run:
